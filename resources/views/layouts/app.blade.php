@@ -7,6 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+        <!-- Pastikan script Lucide di-load -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            lucide.createIcons();
+        });
+    </script>
+
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
@@ -21,11 +29,11 @@
                     </h1>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('fiber-cores.index') }}" 
+                    <a href="{{ route('fiber-cores.index') }}"
                        class="text-gray-600 hover:text-gray-900 {{ request()->routeIs('fiber-cores.index') ? 'font-semibold' : '' }}">
                         Dashboard
                     </a>
-                   
+
                 </div>
             </div>
         </div>
