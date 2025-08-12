@@ -61,7 +61,7 @@ class FiberCoreController extends Controller
             'nama_site' => 'required|string|max:255',
             'region' => 'required|string|max:255',
             'tube_number' => 'required|integer|min:1',
-            'core' => 'required|integer|min:1|max:12',
+            'core' => 'required|integer|min:1',
             'status' => 'required|in:Active,Inactive',
             'penggunaan' => 'required|in:OK,NOK,Idle',
             'otdr' => 'required|integer|min:0',
@@ -70,22 +70,40 @@ class FiberCoreController extends Controller
             'keterangan' => 'nullable|string'
         ]);
 
-        // Check for duplicate core in same site and tube
-        $exists = FiberCore::where('nama_site', $validated['nama_site'])
-            ->where('tube_number', $validated['tube_number'])
-            ->where('core', $validated['core'])
-            ->exists();
+        $tube = (int) $validated['tube_number'];
+        $core = (int) $validated['core'];
+        $corePerTube = floor($core / $tube);
+        $sisa = $core % $tube;
+        $currentCore = 1;
 
-        if ($exists) {
-            return back()->withErrors([
-                'core' => 'Core ' . $validated['core'] . ' pada Tube ' . $validated['tube_number'] . ' di site ini sudah ada.'
-            ])->withInput();
+        for ($t = 1; $t <= $tube; $t++) {
+            $jumlahCore = $corePerTube + ($t <= $sisa ? 1 : 0);
+            for ($c = 1; $c <= $jumlahCore; $c++) {
+                // Cek duplikat
+                $exists = \App\Models\FiberCore::where('nama_site', $validated['nama_site'])
+                    ->where('tube_number', $t)
+                    ->where('core', $currentCore)
+                    ->exists();
+                if (!$exists) {
+                    \App\Models\FiberCore::create([
+                        'nama_site' => $validated['nama_site'],
+                        'region' => $validated['region'],
+                        'tube_number' => $t,
+                        'core' => $currentCore,
+                        'status' => $validated['status'],
+                        'penggunaan' => $validated['penggunaan'],
+                        'otdr' => $validated['otdr'],
+                        'source_site' => $validated['source_site'],
+                        'destination_site' => $validated['destination_site'],
+                        'keterangan' => $validated['keterangan'],
+                    ]);
+                }
+                $currentCore++;
+            }
         }
 
-        FiberCore::create($validated);
-
         return redirect()->route('fiber-cores.index')
-            ->with('success', 'Core fiber berhasil ditambahkan!');
+            ->with('success', 'Semua core berhasil ditambahkan!');
     }
 
     /**
@@ -114,7 +132,7 @@ class FiberCoreController extends Controller
             'nama_site' => 'required|string|max:255',
             'region' => 'required|string|max:255',
             'tube_number' => 'required|integer|min:1',
-            'core' => 'required|integer|min:1|max:12',
+            'core' => 'required|integer|min:1|max:96',
             'status' => 'required|in:Active,Inactive',
             'penggunaan' => 'required|in:OK,NOK,Idle',
             'otdr' => 'required|integer|min:0',
