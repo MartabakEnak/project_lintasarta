@@ -13,3 +13,6 @@ Route::resource('fiber-cores', FiberCoreController::class);
 // Additional route for generating sample data
 Route::get('/generate-sample', [FiberCoreController::class, 'generateSample'])
     ->name('fiber-cores.generate-sample');
+
+Route::get('/fiber-cores/{core}', [FiberCoreController::class, 'show'])->name('fiber-cores.show');
+

@@ -7,16 +7,16 @@
         <div class="p-6">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-bold">Tambah Core Baru</h2>
-                <a href="{{ route('fiber-cores.index') }}" 
+                <a href="{{ route('fiber-cores.index') }}"
                    class="text-gray-600 hover:text-gray-800 flex items-center gap-2">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     Kembali
                 </a>
             </div>
-            
+
             <form action="{{ route('fiber-cores.store') }}" method="POST">
                 @csrf
-                
+
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -35,7 +35,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Region <span class="text-red-500">*</span>
@@ -61,13 +61,14 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Nomor Tube <span class="text-red-500">*</span>
+                                Jumlah Tube <span class="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
+                                id="tube_number"
                                 name="tube_number"
                                 required
                                 min="1"
@@ -82,20 +83,20 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Nomor Core (1-12) <span class="text-red-500">*</span>
+                                Jumlah Core <span class="text-red-500">*</span>
                             </label>
                             <input
                                 type="number"
+                                id="core"
                                 name="core"
                                 required
                                 min="1"
-                                max="12"
                                 class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('core') border-red-500 @enderror"
                                 value="{{ old('core') }}"
-                                placeholder="1-12"
+                                placeholder="Contoh: 24"
                             />
                             <div class="text-xs text-gray-500 mt-1">
                                 Core dalam tube (maksimal 12 per tube)
@@ -104,7 +105,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Status <span class="text-red-500">*</span>
@@ -120,7 +121,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Status Penggunaan <span class="text-red-500">*</span>
@@ -137,7 +138,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 OTDR (m) <span class="text-red-500">*</span>
@@ -155,7 +156,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Source Site <span class="text-red-500">*</span>
@@ -172,7 +173,7 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Destination Site <span class="text-red-500">*</span>
@@ -190,7 +191,7 @@
                             @enderror
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             Keterangan Detail
@@ -208,9 +209,11 @@
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
-                    
+
+                    <div id="tube-core-preview" class="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-700"></div>
+
                     <div class="flex justify-end gap-3 pt-4 border-t">
-                        <a href="{{ route('fiber-cores.index') }}" 
+                        <a href="{{ route('fiber-cores.index') }}"
                            class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                             Batal
                         </a>
@@ -226,3 +229,39 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tubeInput = document.getElementById('tube_number');
+    const coreInput = document.getElementById('core');
+    const preview = document.getElementById('tube-core-preview');
+
+    function updatePreview() {
+        const tube = parseInt(tubeInput.value) || 0;
+        const core = parseInt(coreInput.value) || 0;
+        if (tube > 0 && core > 0) {
+            let html = '<b>Distribusi Tube-Core:</b><br>';
+            let corePerTube = Math.floor(core / tube);
+            let sisa = core % tube;
+            let currentCore = 1;
+            for (let t = 1; t <= tube; t++) {
+                let jumlahCore = corePerTube + (t <= sisa ? 1 : 0);
+                for (let c = 1; c <= jumlahCore; c++) {
+                    html += `tube${t}-core${currentCore}<br>`;
+                    currentCore++;
+                }
+            }
+            preview.innerHTML = html;
+        } else {
+            preview.innerHTML = '';
+        }
+    }
+
+    tubeInput.addEventListener('input', updatePreview);
+    coreInput.addEventListener('input', updatePreview);
+
+    updatePreview();
+});
+</script>
+@endpush
