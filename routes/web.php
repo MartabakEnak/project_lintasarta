@@ -14,5 +14,6 @@ Route::resource('fiber-cores', FiberCoreController::class);
 Route::get('/generate-sample', [FiberCoreController::class, 'generateSample'])
     ->name('fiber-cores.generate-sample');
 
-Route::get('/fiber-cores/{core}', [FiberCoreController::class, 'show'])->name('fiber-cores.show');
+Route::get('/fiber-cores/{cable_id}', [FiberCoreController::class, 'show'])->name('fiber-cores.show');
+Route::put('/fiber-cores/{cable_id}/{id}', [FiberCoreController::class, 'update'])->name('fiber-cores.update');
 

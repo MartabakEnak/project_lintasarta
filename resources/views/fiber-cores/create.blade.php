@@ -184,6 +184,23 @@
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Cable ID <span class="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="cable_id"
+                                required
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('cable_id') border-red-500 @enderror"
+                                value="{{ old('cable_id') }}"
+                                placeholder="Contoh: CBL-001"
+                            />
+                            @error('cable_id')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div>
