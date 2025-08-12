@@ -43,7 +43,7 @@
     @if(session('success'))
         <div class="max-w-7xl mx-auto px-6 mb-6">
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg" x-data="{ show: true }" x-show="show">
-                <div class="flex justify-between items-center">
+                <div class="flex justify-between items-center"> 
                     <span>{{ session('success') }}</span>
                     <button @click="show = false" class="text-green-500 hover:text-green-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

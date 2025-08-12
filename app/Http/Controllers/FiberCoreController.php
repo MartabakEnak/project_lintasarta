@@ -93,7 +93,8 @@ class FiberCoreController extends Controller
      */
     public function show(FiberCore $fiberCore)
     {
-        return view('fiber-cores.show', compact('fiberCore'));
+        // Kirim data ke view, gunakan variabel $core agar konsisten dengan blade
+        return view('fiber-cores.show', ['core' => $fiberCore]);
     }
 
     /**

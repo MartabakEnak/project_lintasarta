@@ -68,7 +68,7 @@
             @foreach($regionalStats as $stat)
                 <div class="bg-gray-50 rounded-lg p-4">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium {{ 
+                        <span class="px-2 py-1 rounded-full text-xs font-medium {{
                             match($stat->region) {
                                 'Denpasar Utara', 'Denpasar Selatan' => 'bg-purple-100 text-purple-800',
                                 'Badung' => 'bg-orange-100 text-orange-800',
@@ -107,7 +107,7 @@
                         value="{{ request('search') }}"
                     />
                 </div>
-                
+
                 <div class="flex items-center gap-2">
                     <i data-lucide="filter" class="w-4 h-4 text-gray-600"></i>
                     <select name="filter_status" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -115,7 +115,7 @@
                         <option value="Active" {{ request('filter_status') === 'Active' ? 'selected' : '' }}>Active</option>
                         <option value="Inactive" {{ request('filter_status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
-                    
+
                     <select name="filter_region" class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="All" {{ request('filter_region') === 'All' ? 'selected' : '' }}>Semua Region</option>
                         @foreach($regions as $region)
@@ -132,13 +132,13 @@
             </div>
 
             <div class="flex gap-2">
-                <a href="{{ route('fiber-cores.create') }}" 
+                <a href="{{ route('fiber-cores.create') }}"
                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                     Tambah Core
                 </a>
                 @if($stats['total'] == 0)
-                    <a href="{{ route('fiber-cores.generate-sample') }}" 
+                    <a href="{{ route('fiber-cores.generate-sample') }}"
                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                         <i data-lucide="database" class="w-4 h-4"></i>
                         Generate Sample
@@ -226,7 +226,7 @@
                                 <div class="text-sm text-gray-900 max-w-md">
                                     <div class="line-clamp-2">{{ Str::limit($core->keterangan, 80) }}</div>
                                     @if(strlen($core->keterangan) > 80)
-                                        <button 
+                                        <button
                                             onclick="showFullText('{{ addslashes($core->keterangan) }}')"
                                             class="text-blue-600 hover:text-blue-800 text-xs mt-1"
                                         >
@@ -247,8 +247,8 @@
                                        title="Lihat Detail">
                                         <i data-lucide="search" class="w-4 h-4"></i>
                                     </a>
-                                    <form action="{{ route('fiber-cores.destroy', $core) }}" 
-                                          method="POST" 
+                                    <form action="{{ route('fiber-cores.destroy', $core) }}"
+                                          method="POST"
                                           class="inline"
                                           onsubmit="confirmDelete(this); return false;">
                                         @csrf
@@ -269,10 +269,10 @@
                                     @if(request()->filled('search') || request()->filled('filter_status') || request()->filled('filter_region'))
                                         Tidak ada data core yang sesuai dengan pencarian
                                     @else
-                                        Belum ada data core. 
+                                        Belum ada data core.
                                         <a href="{{ route('fiber-cores.create') }}" class="text-blue-600 hover:text-blue-800">
                                             Tambah core baru
-                                        </a> atau 
+                                        </a> atau
                                         <a href="{{ route('fiber-cores.generate-sample') }}" class="text-green-600 hover:text-green-800">
                                             generate sample data
                                         </a>
