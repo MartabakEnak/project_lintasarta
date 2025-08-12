@@ -23,7 +23,7 @@
             <div><span class="font-semibold text-gray-700">Destination Site:</span> {{ $site->destination_site }}</div>
             <div><span class="font-semibold text-gray-700">Jumlah Tube:</span> {{ $cores->pluck('tube_number')->unique()->count() }}</div>
             <div><span class="font-semibold text-gray-700">Total Core:</span> {{ $cores->count() }}</div>
-            <div><span class="font-semibold text-gray-700">OTDR (m):</span> {{ $site->otdr }}</div>
+
         </div>
 
         <h3 class="font-semibold mb-4 text-lg">Detail Core per Tube</h3>
@@ -70,7 +70,7 @@
     </div>
 
     <!-- Modal Edit -->
-    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 hidden">
+    <div id="editModal" class="fixed inset-0 z-50  items-center justify-center bg-black bg-opacity-30 hidden">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
             <button onclick="closeEditModal()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             <form id="editForm" method="POST">
@@ -110,6 +110,8 @@
 <script>
     function openEditModal(cableId, id, status, penggunaan, keterangan) {
         document.getElementById('editModal').classList.remove('hidden');
+        document.getElementById('editModal').classList.add('flex');
+
         document.getElementById('edit_core_id').value = id;
         document.getElementById('edit_status').value = status;
         document.getElementById('edit_penggunaan').value = penggunaan;
@@ -120,6 +122,8 @@
     }
     function closeEditModal() {
         document.getElementById('editModal').classList.add('hidden');
+        document.getElementById('editModal').classList.remove('flex');
+
     }
 </script>
 @endpush
