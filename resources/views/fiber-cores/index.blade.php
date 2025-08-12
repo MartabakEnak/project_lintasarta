@@ -8,7 +8,9 @@
         <h1 class="text-3xl font-bold text-gray-900 mb-2">
             Sistem Manajemen Core Fiber Optik
         </h1>
-
+        <p class="text-gray-600">
+            Kelola dan monitor status core fiber optik secara real-time berdasarkan region
+        </p>
     </div>
 
     <!-- Stats Cards -->
@@ -235,7 +237,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex gap-2">
-                                    <a href="{{ route('fiber-cores.edit', $core) }}"
+                                    <a href=""
                                        class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                                        title="Edit Core">
                                         <i data-lucide="edit-3" class="w-4 h-4"></i>

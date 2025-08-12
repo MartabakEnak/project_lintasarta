@@ -14,7 +14,6 @@ class FiberCore extends Model
         'region',
         'tube_number',
         'core',
-        'warna',
         'status',
         'penggunaan',
         'otdr',

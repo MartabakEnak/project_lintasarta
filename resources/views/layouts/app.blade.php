@@ -25,7 +25,6 @@
                        class="text-gray-600 hover:text-gray-900 {{ request()->routeIs('fiber-cores.index') ? 'font-semibold' : '' }}">
                         Dashboard
                     </a>
-                   
                 </div>
             </div>
         </div>
