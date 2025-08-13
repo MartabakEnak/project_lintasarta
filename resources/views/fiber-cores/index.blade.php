@@ -18,7 +18,7 @@
                 <i data-lucide="plus" class="w-5 h-5"></i>
                 Tambah Core
             </a>
-            @if($stats['total'] == 0)
+            @if($stats['total'] == 0 && Auth::user()->isSuperAdmin())
                 <a href="{{ route('fiber-cores.generate-sample') }}"
                    class="inline-flex items-center gap-2 bg-green-600 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-green-700 transition">
                     <i data-lucide="database" class="w-5 h-5"></i>
@@ -36,7 +36,7 @@
             </div>
             <div>
                 <p class="text-sm text-blue-100">Total Core</p>
-                <p class="text-3xl font-bold text-white">{{ $stats['total'] }}</p>
+                <p class="text-3xl font-bold text-white">{{ number_format($stats['total']) }}</p>
             </div>
         </div>
         <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
@@ -45,7 +45,7 @@
             </div>
             <div>
                 <p class="text-sm text-green-100">Core Active</p>
-                <p class="text-3xl font-bold text-white">{{ $stats['active'] }}</p>
+                <p class="text-3xl font-bold text-white">{{ number_format($stats['active']) }}</p>
             </div>
         </div>
         <div class="bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
@@ -54,7 +54,7 @@
             </div>
             <div>
                 <p class="text-sm text-gray-100">Core Inactive</p>
-                <p class="text-3xl font-bold text-white">{{ $stats['inactive'] }}</p>
+                <p class="text-3xl font-bold text-white">{{ number_format($stats['inactive']) }}</p>
             </div>
         </div>
         <div class="bg-gradient-to-br from-red-400 to-red-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
@@ -63,7 +63,7 @@
             </div>
             <div>
                 <p class="text-sm text-red-100">Problem</p>
-                <p class="text-3xl font-bold text-white">{{ $stats['problems'] }}</p>
+                <p class="text-3xl font-bold text-white">{{ number_format($stats['problems']) }}</p>
             </div>
         </div>
     </div>
@@ -84,9 +84,9 @@
                         <i data-lucide="map-pin" class="w-4 h-4 text-blue-400"></i>
                     </div>
                     <div class="flex flex-col gap-1 text-sm">
-                        <span class="text-gray-700">Total: <strong>{{ $stat->total }}</strong></span>
-                        <span class="text-green-700">Active: <strong>{{ $stat->active }}</strong></span>
-                        <span class="text-red-700">Issues: <strong>{{ $stat->problems }}</strong></span>
+                        <span class="text-gray-700">Total: <strong>{{ number_format($stat->total) }}</strong></span>
+                        <span class="text-green-700">Active: <strong>{{ number_format($stat->active) }}</strong></span>
+                        <span class="text-red-700">Issues: <strong>{{ number_format($stat->problems) }}</strong></span>
                     </div>
                 </div>
             @endforeach
@@ -95,28 +95,31 @@
 
     <!-- Controls -->
     <div class="bg-white rounded-xl shadow-lg p-8 mb-10">
-        <form method="GET" action="{{ route('fiber-cores.index') }}" class="flex flex-col lg:flex-row gap-6 items-center justify-between">
-            <div class="flex flex-col md:flex-row gap-4 items-center">
-                <div class="relative">
+        <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
+            <div class="flex flex-col md:flex-row gap-4 items-center w-full">
+                <div class="relative flex-1 max-w-md">
                     <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
                     <input
                         type="text"
-                        name="search"
-                        placeholder="Cari core, site, region, atau keterangan..."
-                        class="pl-12 pr-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80 shadow"
+                        id="searchInput"
+                        placeholder="Cari cable ID, site, region, atau route..."
+                        class="w-full pl-12 pr-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow"
                         value="{{ request('search') }}"
                     />
+                    <div id="searchLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-2">
                     <i data-lucide="filter" class="w-5 h-5 text-blue-600"></i>
-                    <select name="filter_status" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select id="filterStatus" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="All" {{ request('filter_status') === 'All' ? 'selected' : '' }}>Semua Status</option>
                         <option value="Active" {{ request('filter_status') === 'Active' ? 'selected' : '' }}>Active</option>
                         <option value="Inactive" {{ request('filter_status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
 
-                    <select name="filter_region" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select id="filterRegion" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="All" {{ request('filter_region') === 'All' ? 'selected' : '' }}>Semua Region</option>
                         @foreach($regions as $region)
                             <option value="{{ $region }}" {{ request('filter_region') === $region ? 'selected' : '' }}>
@@ -124,13 +127,18 @@
                             </option>
                         @endforeach
                     </select>
-                </div> 
+                </div>
 
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow transition">
-                    <i data-lucide="filter" class="w-5 h-5 mr-1"></i> Filter
+                <button id="clearFilters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold shadow transition">
+                    <i data-lucide="x" class="w-5 h-5 mr-1"></i> Clear
                 </button>
             </div>
-        </form>
+        </div>
+        
+        <!-- Search Results Count -->
+        <div id="searchResults" class="mt-4 text-sm text-gray-600 hidden">
+            <span id="resultsCount"></span>
+        </div>
     </div>
 
     <!-- Table -->
@@ -148,54 +156,100 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-blue-100">
-                    @forelse($sites as $site)
-                        <tr class="hover:bg-blue-50 transition">
-                            <td class="px-6 py-4 whitespace-nowrap font-semibold text-blue-900">
-                                {{ $site->cable_id }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap font-semibold text-blue-900">
-                                {{ $site->nama_site }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 shadow">
-                                    {{ $site->region }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-blue-900">{{ $site->source_site }}</div>
-                                <div class="text-xs text-blue-400">↓</div>
-                                <div class="text-sm text-blue-900">{{ $site->destination_site }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
-                                {{ $site->tube_number }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
-                                {{ $site->total_core }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('fiber-cores.show', $site->cable_id) }}"
-                                   class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition"
-                                   title="Lihat Detail">
-                                    <i data-lucide="search" class="w-4 h-4"></i>
-                                    Detail
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-12 text-gray-500">
-                                Tidak ada data site.
-                            </td>
-                        </tr>
-                    @endforelse
+                <tbody id="sitesTableBody" class="bg-white divide-y divide-blue-100">
+                    @include('fiber-cores.partials.sites-table', ['sites' => $sites])
                 </tbody>
             </table>
         </div>
-        @if(method_exists($sites, 'links'))
-            <div class="bg-white px-4 py-3 border-t border-blue-100 sm:px-6">
-                {{ $sites->links() }}
-            </div>
-        @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterRegion = document.getElementById('filterRegion');
+    const clearFilters = document.getElementById('clearFilters');
+    const searchLoading = document.getElementById('searchLoading');
+    const searchResults = document.getElementById('searchResults');
+    const resultsCount = document.getElementById('resultsCount');
+    const sitesTableBody = document.getElementById('sitesTableBody');
+    
+    let searchTimeout;
+
+    // Real-time search function
+    function performSearch() {
+        const search = searchInput.value;
+        const status = filterStatus.value;
+        const region = filterRegion.value;
+        
+        // Show loading
+        searchLoading.classList.remove('hidden');
+        
+        // Build URL with parameters
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (status && status !== 'All') params.append('filter_status', status);
+        if (region && region !== 'All') params.append('filter_region', region);
+        
+        // Make AJAX request
+        fetch(`{{ route('fiber-cores.search') }}?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update table content
+            sitesTableBody.innerHTML = data.html;
+            
+            // Update results count
+            if (search || status !== 'All' || region !== 'All') {
+                searchResults.classList.remove('hidden');
+                resultsCount.textContent = `Menampilkan ${data.count} hasil`;
+            } else {
+                searchResults.classList.add('hidden');
+            }
+            
+            // Reinitialize icons
+            reinitializeIcons();
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+        })
+        .finally(() => {
+            // Hide loading
+            searchLoading.classList.add('hidden');
+        });
+    }
+
+    // Search input with debounce
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300); // 300ms delay
+    });
+
+    // Filter changes
+    filterStatus.addEventListener('change', performSearch);
+    filterRegion.addEventListener('change', performSearch);
+
+    // Clear filters
+    clearFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        filterStatus.value = 'All';
+        filterRegion.value = 'All';
+        searchResults.classList.add('hidden');
+        performSearch();
+    });
+
+    // Initial search if there are URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('search') || urlParams.has('filter_status') || urlParams.has('filter_region')) {
+        performSearch();
+    }
+});
+</script>
+@endpush
