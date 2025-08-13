@@ -318,6 +318,7 @@ class FiberCoreController extends Controller
                 'region',
                 'source_site',
                 'destination_site',
+                'otdr',
                 DB::raw('MAX(tube_number) as tube_number'),
                 DB::raw('COUNT(*) as total_core')
             );
@@ -344,7 +345,7 @@ class FiberCoreController extends Controller
             $query->where('region', $request->filter_region);
         }
 
-        $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site')
+        $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site', 'otdr')
             ->orderBy('cable_id')
             ->get();
 
