@@ -18,6 +18,9 @@
             <div class="text-sm text-blue-900">{{ $site->destination_site }}</div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
+            {{ $site->otdr }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
             {{ $site->tube_number }}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
