@@ -13,41 +13,42 @@ class FiberCoreController extends Controller
      */
     public function index(Request $request)
     {
-        $query = FiberCore::query();
-
-        // Apply filters
-        $query->search($request->search)
-            ->byStatus($request->filter_status)
-            ->byRegion($request->filter_region);
-
-        // Get paginated results
-        $cores = DB::table('fiber_cores')
+        $sites = DB::table('fiber_cores')
             ->select(
+                'cable_id',
                 'nama_site',
-                DB::raw('SUM(otdr) as total_otdr'),
-                DB::raw('COUNT(*) as total_cores'),
-                DB::raw('COUNT(DISTINCT tube_number) as total_tubes')
+                'region',
+                'source_site',
+                'destination_site',
+                DB::raw('MAX(tube_number) as tube_number'),
+                DB::raw('COUNT(*) as total_core')
             )
-            ->groupBy('nama_site')
-            ->orderBy('nama_site')
-            ->paginate(20)
-            ->withQueryString();
+            ->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site')
+            ->orderBy('cable_id')
+            ->get();
 
-        // Get statistics
-        $stats = $this->getStatistics();
+        // Query statistik dan regionalStats sesuai kebutuhan lama Anda
+        $stats = [
+            'total' => \App\Models\FiberCore::count(),
+            'active' => \App\Models\FiberCore::where('status', 'Active')->count(),
+            'inactive' => \App\Models\FiberCore::where('status', 'Inactive')->count(),
+            'problems' => \App\Models\FiberCore::where('penggunaan', 'NOK')->count(),
+        ];
 
-        // Get regional statistics
-        $regionalStats = $this->getRegionalStatistics();
+        $regionalStats = DB::table('fiber_cores')
+            ->select(
+                'region',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "Active" THEN 1 ELSE 0 END) as active'),
+                DB::raw('SUM(CASE WHEN penggunaan = "NOK" THEN 1 ELSE 0 END) as problems')
+            )
+            ->groupBy('region')
+            ->orderBy('region')
+            ->get();
 
-        // Get unique regions for filter dropdown
-        $regions = FiberCore::distinct('region')->pluck('region')->sort();
+        $regions = \App\Models\FiberCore::select('region')->distinct()->pluck('region');
 
-        return view('fiber-cores.index', compact(
-            'cores',
-            'stats',
-            'regionalStats',
-            'regions'
-        ));
+        return view('fiber-cores.index', compact('sites', 'stats', 'regionalStats', 'regions'));
     }
 
     /**
@@ -64,6 +65,7 @@ class FiberCoreController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'cable_id' => 'required|string|max:255|',
             'nama_site' => 'required|string|max:255',
             'region' => 'required|string|max:255',
             'tube_number' => 'required|integer|min:1',
@@ -85,13 +87,14 @@ class FiberCoreController extends Controller
         for ($t = 1; $t <= $tube; $t++) {
             $jumlahCore = $corePerTube + ($t <= $sisa ? 1 : 0);
             for ($c = 1; $c <= $jumlahCore; $c++) {
-                // Cek duplikat
-                $exists = \App\Models\FiberCore::where('nama_site', $validated['nama_site'])
+                // Cek duplikat core pada cable_id
+                $exists = \App\Models\FiberCore::where('cable_id', $validated['cable_id'])
                     ->where('tube_number', $t)
                     ->where('core', $currentCore)
                     ->exists();
                 if (!$exists) {
                     \App\Models\FiberCore::create([
+                        'cable_id' => $validated['cable_id'],
                         'nama_site' => $validated['nama_site'],
                         'region' => $validated['region'],
                         'tube_number' => $t,
@@ -115,10 +118,18 @@ class FiberCoreController extends Controller
     /**
      * Display the specified fiber core
      */
-    public function show(FiberCore $fiberCore)
+    public function show($cable_id)
     {
-        // Kirim data ke view, gunakan variabel $core agar konsisten dengan blade
-        return view('fiber-cores.show', ['core' => $fiberCore]);
+        // Ambil semua core dengan cable_id ini
+        $cores = \App\Models\FiberCore::where('cable_id', $cable_id)
+            ->orderBy('tube_number')
+            ->orderBy('core')
+            ->get();
+
+        // Ambil info site (ambil satu saja)
+        $site = $cores->first();
+
+        return view('fiber-cores.show', compact('site', 'cores'));
     }
 
     /**
@@ -132,38 +143,20 @@ class FiberCoreController extends Controller
     /**
      * Update the specified fiber core
      */
-    public function update(Request $request, FiberCore $fiberCore)
+    public function update(Request $request, $cable_id, $id)
     {
+        $core = FiberCore::where('cable_id', $cable_id)->where('id', $id)->firstOrFail();
+
         $validated = $request->validate([
-            'nama_site' => 'required|string|max:255',
-            'region' => 'required|string|max:255',
-            'tube_number' => 'required|integer|min:1',
-            'core' => 'required|integer|min:1|max:96',
             'status' => 'required|in:Active,Inactive',
             'penggunaan' => 'required|in:OK,NOK,Idle',
-            'otdr' => 'required|integer|min:0',
-            'source_site' => 'required|string|max:255',
-            'destination_site' => 'required|string|max:255',
             'keterangan' => 'nullable|string'
         ]);
 
-        // Check for duplicate core (excluding current record)
-        $exists = FiberCore::where('nama_site', $validated['nama_site'])
-            ->where('tube_number', $validated['tube_number'])
-            ->where('core', $validated['core'])
-            ->where('id', '!=', $fiberCore->id)
-            ->exists();
+        $core->update($validated);
 
-        if ($exists) {
-            return back()->withErrors([
-                'core' => 'Core ' . $validated['core'] . ' pada Tube ' . $validated['tube_number'] . ' di site ini sudah ada.'
-            ])->withInput();
-        }
-
-        $fiberCore->update($validated);
-
-        return redirect()->route('fiber-cores.index')
-            ->with('success', 'Core fiber berhasil diperbarui!');
+        return redirect()->route('fiber-cores.show', $cable_id)
+            ->with('success', 'Core berhasil diperbarui!');
     }
 
     /**

@@ -25,10 +25,7 @@ return new class extends Migration {
             $table->string('tube')->nullable(); // Computed field like "TUBE 1"
             $table->timestamps();
 
-            // Indexes for better performance
-            $table->index(['region', 'status']);
-            $table->index(['tube_number', 'core']);
-            $table->unique(['nama_site', 'tube_number', 'core']); // Prevent duplicates
+           
         });
     }
 

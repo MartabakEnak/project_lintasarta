@@ -10,6 +10,7 @@ class FiberCore extends Model
     use HasFactory;
 
     protected $fillable = [
+        'cable_id', // tambahkan ini
         'nama_site',
         'region',
         'tube_number',
