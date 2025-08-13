@@ -3,95 +3,95 @@
 @section('title', 'Dashboard - Fiber Core Management')
 
 @section('content')
-    <!-- Hero Section -->
-    <div class="relative bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 rounded-xl shadow-lg p-8 mb-10 overflow-hidden">
-        <div class="absolute right-0 top-0 opacity-20 pointer-events-none">
-            <i data-lucide="activity" class="w-64 h-64 text-white"></i>
-        </div>
-        <h1 class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">
-            Sistem Manajemen Core Fiber Optik
-        </h1>
-        <p class="text-lg text-blue-100 mb-4">Monitoring, statistik, dan pengelolaan core fiber optik Anda dalam satu dashboard.</p>
-        <div class="flex gap-4">
-            <a href="{{ route('fiber-cores.create') }}"
-               class="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3 rounded-lg shadow hover:bg-blue-50 transition">
-                <i data-lucide="plus" class="w-5 h-5"></i>
-                Tambah Core
-            </a>
-            @if($stats['total'] == 0 && Auth::user()->isSuperAdmin())
-                <a href="{{ route('fiber-cores.generate-sample') }}"
-                   class="inline-flex items-center gap-2 bg-green-600 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-green-700 transition">
-                    <i data-lucide="database" class="w-5 h-5"></i>
-                    Generate Sample
-                </a>
-            @endif
-        </div>
+<!-- Hero Section -->
+<div class="relative bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 rounded-xl shadow-lg p-8 mb-10 overflow-hidden">
+    <div class="absolute right-0 top-0 opacity-20 pointer-events-none">
+        <i data-lucide="activity" class="w-64 h-64 text-white"></i>
     </div>
+    <h1 class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">
+        Sistem Manajemen Core Fiber Optik
+    </h1>
+    <p class="text-lg text-blue-100 mb-4">Monitoring, statistik, dan pengelolaan core fiber optik Anda dalam satu dashboard.</p>
+    <div class="flex gap-4">
+        <a href="{{ route('fiber-cores.create') }}"
+            class="inline-flex items-center gap-2 bg-white text-blue-700 font-semibold px-6 py-3 rounded-lg shadow hover:bg-blue-50 transition">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            Tambah Core
+        </a>
+        @if($stats['total'] == 0 && Auth::user()->isSuperAdmin())
+        <a href="{{ route('fiber-cores.generate-sample') }}"
+            class="inline-flex items-center gap-2 bg-green-600 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-green-700 transition">
+            <i data-lucide="database" class="w-5 h-5"></i>
+            Generate Sample
+        </a>
+        @endif
+    </div>
+</div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg p-6 flex items-center gap-4">
-            <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
-                <i data-lucide="layers" class="w-8 h-8 text-white"></i>
-            </div>
-            <div>
-                <p class="text-sm text-blue-100">Total Core</p>
-                <p class="text-3xl font-bold text-white">{{ number_format($stats['total']) }}</p>
-            </div>
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+    <div class="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-lg p-6 flex items-center gap-4">
+        <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
+            <i data-lucide="layers" class="w-8 h-8 text-white"></i>
         </div>
-        <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
-            <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
-                <i data-lucide="check-circle" class="w-8 h-8 text-white"></i>
-            </div>
-            <div>
-                <p class="text-sm text-green-100">Core Active</p>
-                <p class="text-3xl font-bold text-white">{{ number_format($stats['active']) }}</p>
-            </div>
-        </div>
-        <div class="bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
-            <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
-                <i data-lucide="x-circle" class="w-8 h-8 text-white"></i>
-            </div>
-            <div>
-                <p class="text-sm text-gray-100">Core Inactive</p>
-                <p class="text-3xl font-bold text-white">{{ number_format($stats['inactive']) }}</p>
-            </div>
-        </div>
-        <div class="bg-gradient-to-br from-red-400 to-red-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
-            <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
-                <i data-lucide="alert-triangle" class="w-8 h-8 text-white"></i>
-            </div>
-            <div>
-                <p class="text-sm text-red-100">Problem</p>
-                <p class="text-3xl font-bold text-white">{{ number_format($stats['problems']) }}</p>
-            </div>
+        <div>
+            <p class="text-sm text-blue-100">Total Core</p>
+            <p class="text-3xl font-bold text-white">{{ number_format($stats['total']) }}</p>
         </div>
     </div>
+    <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
+        <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
+            <i data-lucide="check-circle" class="w-8 h-8 text-white"></i>
+        </div>
+        <div>
+            <p class="text-sm text-green-100">Core Active</p>
+            <p class="text-3xl font-bold text-white">{{ number_format($stats['active']) }}</p>
+        </div>
+    </div>
+    <div class="bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
+        <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
+            <i data-lucide="x-circle" class="w-8 h-8 text-white"></i>
+        </div>
+        <div>
+            <p class="text-sm text-gray-100">Core Inactive</p>
+            <p class="text-3xl font-bold text-white">{{ number_format($stats['inactive']) }}</p>
+        </div>
+    </div>
+    <div class="bg-gradient-to-br from-red-400 to-red-600 rounded-xl shadow-lg p-6 flex items-center gap-4">
+        <div class="flex-shrink-0 bg-white bg-opacity-20 rounded-full p-3">
+            <i data-lucide="alert-triangle" class="w-8 h-8 text-white"></i>
+        </div>
+        <div>
+            <p class="text-sm text-red-100">Problem</p>
+            <p class="text-3xl font-bold text-white">{{ number_format($stats['problems']) }}</p>
+        </div>
+    </div>
+</div>
 
-    <!-- Regional Overview -->
-    <div class="bg-white rounded-xl shadow-lg p-8 mb-10">
-        <h2 class="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">
-            <i data-lucide="map-pin" class="w-6 h-6"></i>
-            Overview Regional
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @foreach($regionalStats as $stat)
-                <div class="bg-gradient-to-br from-blue-50 to-white rounded-lg p-6 shadow flex flex-col gap-2 border border-blue-100">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 shadow">
-                            {{ $stat->region }}
-                        </span>
-                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-400"></i>
-                    </div>
-                    <div class="flex flex-col gap-1 text-sm">
-                        <span class="text-gray-700">Total: <strong>{{ number_format($stat->total) }}</strong></span>
-                        <span class="text-green-700">Active: <strong>{{ number_format($stat->active) }}</strong></span>
-                        <span class="text-red-700">Issues: <strong>{{ number_format($stat->problems) }}</strong></span>
-                    </div>
-                </div>
-            @endforeach
+<!-- Regional Overview -->
+<div class="bg-white rounded-xl shadow-lg p-8 mb-10">
+    <h2 class="text-2xl font-bold text-blue-700 mb-6 flex items-center gap-2">
+        <i data-lucide="map-pin" class="w-6 h-6"></i>
+        Overview Regional
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @foreach($regionalStats as $stat)
+        <div class="bg-gradient-to-br from-blue-50 to-white rounded-lg p-6 shadow flex flex-col gap-2 border border-blue-100">
+            <div class="flex items-center justify-between mb-2">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 shadow">
+                    {{ $stat->region }}
+                </span>
+                <i data-lucide="map-pin" class="w-4 h-4 text-blue-400"></i>
+            </div>
+            <div class="flex flex-col gap-1 text-sm">
+                <span class="text-gray-700">Total: <strong>{{ number_format($stat->total) }}</strong></span>
+                <span class="text-green-700">Active: <strong>{{ number_format($stat->active) }}</strong></span>
+                <span class="text-red-700">Issues: <strong>{{ number_format($stat->problems) }}</strong></span>
+            </div>
         </div>
+        @endforeach
     </div>
+</div>
 
     <!-- Search Controls -->
     <div class="bg-white rounded-xl shadow-lg p-8 mb-10">
@@ -123,70 +123,70 @@
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gradient-to-r from-blue-100 to-blue-50 border-b">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Cable ID</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Site</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Region</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Route</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">OTDR (m)</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Jumlah Tube</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Total Core</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="sitesTableBody" class="bg-white divide-y divide-blue-100">
-                    @include('fiber-cores.partials.sites-table', ['sites' => $sites])
-                </tbody>
-            </table>
-        </div>
+<!-- Table -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gradient-to-r from-blue-100 to-blue-50 border-b">
+                <tr>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Cable ID</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Site</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Region</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Route</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">OTDR (m)</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Jumlah Tube</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Total Core</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="sitesTableBody" class="bg-white divide-y divide-blue-100">
+                @include('fiber-cores.partials.sites-table', ['sites' => $sites])
+            </tbody>
+        </table>
     </div>
+</div>
 
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="bg-red-100 p-2 rounded-full">
-                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
-                </div>
-                <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus Cable</h3>
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="bg-red-100 p-2 rounded-full">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
             </div>
+            <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus Cable</h3>
+        </div>
 
-            <div class="mb-6">
-                <p class="text-gray-600 mb-3">Apakah Anda yakin ingin menghapus cable berikut?</p>
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div class="space-y-2">
-                        <div><span class="font-semibold">Cable ID:</span> <span id="deleteCableId" class="text-red-700 font-medium"></span></div>
-                        <div><span class="font-semibold">Nama Site:</span> <span id="deleteSiteName" class="text-red-700"></span></div>
-                        <div><span class="font-semibold">Total Core:</span> <span id="deleteTotalCore" class="text-red-700 font-medium"></span> core akan dihapus</div>
-                    </div>
+        <div class="mb-6">
+            <p class="text-gray-600 mb-3">Apakah Anda yakin ingin menghapus cable berikut?</p>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="space-y-2">
+                    <div><span class="font-semibold">Cable ID:</span> <span id="deleteCableId" class="text-red-700 font-medium"></span></div>
+                    <div><span class="font-semibold">Nama Site:</span> <span id="deleteSiteName" class="text-red-700"></span></div>
+                    <div><span class="font-semibold">Total Core:</span> <span id="deleteTotalCore" class="text-red-700 font-medium"></span> core akan dihapus</div>
                 </div>
-                <p class="text-red-600 text-sm mt-3 font-medium">⚠️ Tindakan ini tidak dapat dibatalkan!</p>
             </div>
+            <p class="text-red-600 text-sm mt-3 font-medium">⚠️ Tindakan ini tidak dapat dibatalkan!</p>
+        </div>
 
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeDeleteModal()"
-                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                    Batal
+        <div class="flex justify-end gap-3">
+            <button type="button" onclick="closeDeleteModal()"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                Batal
+            </button>
+            <form id="deleteForm" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                    Ya, Hapus Cable
                 </button>
-                <form id="deleteForm" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
-                        Ya, Hapus Cable
-                    </button>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
+</div>
 
-    @push('scripts')
-    <script>
+@push('scripts')
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
@@ -257,17 +257,17 @@
         });
 
         // Auto-focus search input on page load if there's a search query
-        @if(request('search'))
-        searchInput?.focus();
+        if (request('search'))
+            searchInput?.focus();
         searchInput?.setSelectionRange(searchInput.value.length, searchInput.value.length);
-        @endif
+        endif
 
         // Show success message for search results
-        @if(session('search_success'))
-        setTimeout(() => {
-            const alert = document.createElement('div');
-            alert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-            alert.innerHTML = `
+        if (session('search_success'))
+            setTimeout(() => {
+                const alert = document.createElement('div');
+                alert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+                alert.innerHTML = `
                 <div class="flex items-center gap-2">
                     <i data-lucide="check-circle" class="w-4 h-4"></i>
                     <span>{{ session('search_success') }}</span>
@@ -276,14 +276,14 @@
                     </button>
                 </div>
             `;
-            document.body.appendChild(alert);
+                document.body.appendChild(alert);
 
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                alert?.remove();
-            }, 5000);
-        }, 100);
-        @endif
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    alert?.remove();
+                }, 5000);
+            }, 100);
+        endif
     });
 
     // Delete Modal Functions
@@ -416,3 +416,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
