@@ -34,6 +34,16 @@ Route::middleware(['auth'])->group(function () {
     // Custom update route for individual cores
     Route::put('/fiber-cores/{cable_id}/{id}', [FiberCoreController::class, 'update'])->name('fiber-cores.update');
 
+    // Delete entire cable with all cores
+    Route::delete('/fiber-cores/delete-cable/{cable_id}', [FiberCoreController::class, 'deleteCable'])
+        ->name('fiber-cores.delete-cable')
+        ->middleware(['auth']);
+
+    // AJAX search route (if not already exists)
+    Route::get('/fiber-cores/search', [FiberCoreController::class, 'search'])
+        ->name('fiber-cores.search')
+        ->middleware(['auth']);
+
     // Generate sample data route (superadmin only)
     Route::get('/generate-sample', [FiberCoreController::class, 'generateSample'])
         ->name('fiber-cores.generate-sample');

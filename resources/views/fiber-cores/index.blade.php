@@ -93,7 +93,7 @@
         </div>
     </div>
 
-    <!-- Search & Filter Controls -->
+    <!-- Search Controls -->
     <div class="bg-white rounded-xl shadow-lg p-8 mb-10">
         <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
             <div class="flex flex-col md:flex-row gap-4 items-center w-full">
@@ -111,30 +111,12 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <i data-lucide="filter" class="w-5 h-5 text-blue-600"></i>
-                    <select id="filterStatus" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="All" {{ request('filter_status') === 'All' ? 'selected' : '' }}>Semua Status</option>
-                        <option value="Active" {{ request('filter_status') === 'Active' ? 'selected' : '' }}>Active</option>
-                        <option value="Inactive" {{ request('filter_status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-
-                    <select id="filterRegion" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="All" {{ request('filter_region') === 'All' ? 'selected' : '' }}>Semua Region</option>
-                        @foreach($regions as $region)
-                            <option value="{{ $region }}" {{ request('filter_region') === $region ? 'selected' : '' }}>
-                                {{ $region }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <button id="clearFilters" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg font-semibold shadow transition">
                     <i data-lucide="x" class="w-5 h-5 mr-1"></i> Clear
                 </button>
             </div>
         </div>
-        
+
         <!-- Search Results Count -->
         <div id="searchResults" class="mt-4 text-sm text-gray-600 hidden">
             <span id="resultsCount"></span>
@@ -208,8 +190,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         const searchForm = document.getElementById('searchForm');
         const searchInput = document.getElementById('searchInput');
-        const filterStatus = document.getElementById('filterStatus');
-        const filterRegion = document.getElementById('filterRegion');
         const searchLoading = document.getElementById('searchLoading');
         const searchIndicator = document.getElementById('searchIndicator');
         const clearSearchBtn = document.getElementById('clearSearch');
@@ -245,21 +225,6 @@
             submitFormWithDelay();
         });
 
-        // Auto submit on filter changes
-        filterStatus?.addEventListener('change', function() {
-            showLoading();
-            setTimeout(function() {
-                searchForm.submit();
-            }, 100);
-        });
-
-        filterRegion?.addEventListener('change', function() {
-            showLoading();
-            setTimeout(function() {
-                searchForm.submit();
-            }, 100);
-        });
-
         // Clear search functionality
         clearSearchBtn?.addEventListener('click', function() {
             searchInput.value = '';
@@ -285,9 +250,7 @@
 
         // Prevent form submission on Enter if search is empty
         searchForm?.addEventListener('submit', function(e) {
-            if (searchInput.value.trim() === '' &&
-                filterStatus.value === 'All' &&
-                filterRegion.value === 'All') {
+            if (searchInput.value.trim() === '') {
                 e.preventDefault();
                 window.location.href = "{{ route('fiber-cores.index') }}";
             }
@@ -355,6 +318,20 @@
             closeDeleteModal();
         }
     });
+
+    // Global function to clear all filters (used in sites-table partial)
+    window.clearAllFilters = function() {
+        searchInput.value = '';
+        searchResults.classList.add('hidden');
+        performSearch();
+    };
+
+    // Function to reinitialize Lucide icons after AJAX load
+    window.reinitializeIcons = function() {
+        if (typeof lucide !== 'undefined' && lucide.createIcons) {
+            lucide.createIcons();
+        }
+    };
     </script>
     @endpush
 @endsection
@@ -363,31 +340,25 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
-    const filterStatus = document.getElementById('filterStatus');
-    const filterRegion = document.getElementById('filterRegion');
     const clearFilters = document.getElementById('clearFilters');
     const searchLoading = document.getElementById('searchLoading');
     const searchResults = document.getElementById('searchResults');
     const resultsCount = document.getElementById('resultsCount');
     const sitesTableBody = document.getElementById('sitesTableBody');
-    
+
     let searchTimeout;
 
     // Real-time search function
     function performSearch() {
         const search = searchInput.value;
-        const status = filterStatus.value;
-        const region = filterRegion.value;
-        
+
         // Show loading
         searchLoading.classList.remove('hidden');
-        
+
         // Build URL with parameters
         const params = new URLSearchParams();
         if (search) params.append('search', search);
-        if (status && status !== 'All') params.append('filter_status', status);
-        if (region && region !== 'All') params.append('filter_region', region);
-        
+
         // Make AJAX request
         fetch(`{{ route('fiber-cores.search') }}?${params.toString()}`, {
             method: 'GET',
@@ -400,15 +371,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             // Update table content
             sitesTableBody.innerHTML = data.html;
-            
+
             // Update results count
-            if (search || status !== 'All' || region !== 'All') {
+            if (search) {
                 searchResults.classList.remove('hidden');
                 resultsCount.textContent = `Menampilkan ${data.count} hasil`;
             } else {
                 searchResults.classList.add('hidden');
             }
-            
+
             // Reinitialize icons
             reinitializeIcons();
         })
@@ -427,24 +398,21 @@ document.addEventListener('DOMContentLoaded', function() {
         searchTimeout = setTimeout(performSearch, 300); // 300ms delay
     });
 
-    // Filter changes
-    filterStatus.addEventListener('change', performSearch);
-    filterRegion.addEventListener('change', performSearch);
-
     // Clear filters
     clearFilters.addEventListener('click', function() {
         searchInput.value = '';
-        filterStatus.value = 'All';
-        filterRegion.value = 'All';
         searchResults.classList.add('hidden');
         performSearch();
     });
 
     // Initial search if there are URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('search') || urlParams.has('filter_status') || urlParams.has('filter_region')) {
+    if (urlParams.has('search')) {
         performSearch();
     }
+
+    // Make performSearch globally accessible
+    window.performSearch = performSearch;
 });
 </script>
 @endpush

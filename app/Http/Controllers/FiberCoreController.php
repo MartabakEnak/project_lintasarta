@@ -48,10 +48,7 @@ class FiberCoreController extends Controller
             });
         }
 
-        // Apply region filter
-        if ($request->has('filter_region') && $request->filter_region && $request->filter_region !== 'All') {
-            $query->where('region', $request->filter_region);
-        }
+
 
         $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site', 'otdr')
             ->orderBy('cable_id')
@@ -87,12 +84,7 @@ class FiberCoreController extends Controller
             ->orderBy('region')
             ->get();
 
-        // Get regions based on user access
-        $regions = $user->isSuperAdmin()
-            ? FiberCore::select('region')->distinct()->pluck('region')
-            : collect([$user->region]);
-
-        return view('fiber-cores.index', compact('sites', 'stats', 'regionalStats', 'regions'));
+        return view('fiber-cores.index', compact('sites', 'stats', 'regionalStats'));
     }
 
     /**
@@ -257,6 +249,38 @@ class FiberCoreController extends Controller
     }
 
     /**
+     * Delete entire cable with all its cores - NEW METHOD
+     */
+    public function deleteCable($cable_id)
+    {
+        $user = Auth::user();
+
+        // Get all cores for this cable
+        $cores = FiberCore::where('cable_id', $cable_id)->get();
+
+        if ($cores->isEmpty()) {
+            return redirect()->route('fiber-cores.index')
+                ->with('error', 'Cable ID tidak ditemukan!');
+        }
+
+        // Check regional access for the first core (all cores should have same region)
+        $firstCore = $cores->first();
+        if (!$user->isSuperAdmin() && !$user->canAccessRegion($firstCore->region)) {
+            abort(403, 'Anda tidak memiliki akses ke region ini.');
+        }
+
+        // Count total cores before deletion
+        $totalCores = $cores->count();
+        $siteName = $firstCore->nama_site;
+
+        // Delete all cores for this cable
+        FiberCore::where('cable_id', $cable_id)->delete();
+
+        return redirect()->route('fiber-cores.index')
+            ->with('success', "Cable {$cable_id} ({$siteName}) berhasil dihapus beserta {$totalCores} core!");
+    }
+
+    /**
      * Generate sample data (for testing purposes)
      */
     public function generateSample()
@@ -340,10 +364,7 @@ class FiberCoreController extends Controller
             });
         }
 
-        // Apply region filter
-        if ($request->has('filter_region') && $request->filter_region && $request->filter_region !== 'All') {
-            $query->where('region', $request->filter_region);
-        }
+
 
         $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site', 'otdr')
             ->orderBy('cable_id')
