@@ -93,7 +93,7 @@
         </div>
     </div>
 
-    <!-- Controls -->
+    <!-- Search & Filter Controls -->
     <div class="bg-white rounded-xl shadow-lg p-8 mb-10">
         <div class="flex flex-col lg:flex-row gap-6 items-center justify-between">
             <div class="flex flex-col md:flex-row gap-4 items-center w-full">
@@ -151,6 +151,7 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Site</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Region</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Route</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">OTDR (m)</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Jumlah Tube</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Total Core</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Aksi</th>
@@ -162,6 +163,200 @@
             </table>
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-red-100 p-2 rounded-full">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus Cable</h3>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-gray-600 mb-3">Apakah Anda yakin ingin menghapus cable berikut?</p>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="space-y-2">
+                        <div><span class="font-semibold">Cable ID:</span> <span id="deleteCableId" class="text-red-700 font-medium"></span></div>
+                        <div><span class="font-semibold">Nama Site:</span> <span id="deleteSiteName" class="text-red-700"></span></div>
+                        <div><span class="font-semibold">Total Core:</span> <span id="deleteTotalCore" class="text-red-700 font-medium"></span> core akan dihapus</div>
+                    </div>
+                </div>
+                <p class="text-red-600 text-sm mt-3 font-medium">⚠️ Tindakan ini tidak dapat dibatalkan!</p>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeDeleteModal()"
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                    Batal
+                </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                        Ya, Hapus Cable
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const filterStatus = document.getElementById('filterStatus');
+        const filterRegion = document.getElementById('filterRegion');
+        const searchLoading = document.getElementById('searchLoading');
+        const searchIndicator = document.getElementById('searchIndicator');
+        const clearSearchBtn = document.getElementById('clearSearch');
+
+        let searchTimeout;
+
+        // Function to show loading state
+        function showLoading() {
+            searchLoading?.classList.remove('hidden');
+            searchIndicator?.classList.add('animate-pulse', 'bg-blue-200');
+            searchIndicator?.classList.remove('bg-blue-100');
+        }
+
+        // Function to hide loading state
+        function hideLoading() {
+            searchLoading?.classList.add('hidden');
+            searchIndicator?.classList.remove('animate-pulse', 'bg-blue-200');
+            searchIndicator?.classList.add('bg-blue-100');
+        }
+
+        // Function to submit form with delay (debounce)
+        function submitFormWithDelay() {
+            clearTimeout(searchTimeout);
+            showLoading();
+
+            searchTimeout = setTimeout(function() {
+                searchForm.submit();
+            }, 600); // 600ms delay for better UX
+        }
+
+        // Real-time search on input
+        searchInput?.addEventListener('input', function() {
+            submitFormWithDelay();
+        });
+
+        // Auto submit on filter changes
+        filterStatus?.addEventListener('change', function() {
+            showLoading();
+            setTimeout(function() {
+                searchForm.submit();
+            }, 100);
+        });
+
+        filterRegion?.addEventListener('change', function() {
+            showLoading();
+            setTimeout(function() {
+                searchForm.submit();
+            }, 100);
+        });
+
+        // Clear search functionality
+        clearSearchBtn?.addEventListener('click', function() {
+            searchInput.value = '';
+            submitFormWithDelay();
+        });
+
+        // Clear search on Escape key
+        searchInput?.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                submitFormWithDelay();
+            }
+        });
+
+        // Visual feedback on focus
+        searchInput?.addEventListener('focus', function() {
+            searchIndicator?.classList.add('ring-2', 'ring-blue-300', 'ring-opacity-50');
+        });
+
+        searchInput?.addEventListener('blur', function() {
+            searchIndicator?.classList.remove('ring-2', 'ring-blue-300', 'ring-opacity-50');
+        });
+
+        // Prevent form submission on Enter if search is empty
+        searchForm?.addEventListener('submit', function(e) {
+            if (searchInput.value.trim() === '' &&
+                filterStatus.value === 'All' &&
+                filterRegion.value === 'All') {
+                e.preventDefault();
+                window.location.href = "{{ route('fiber-cores.index') }}";
+            }
+        });
+
+        // Auto-focus search input on page load if there's a search query
+        @if(request('search'))
+        searchInput?.focus();
+        searchInput?.setSelectionRange(searchInput.value.length, searchInput.value.length);
+        @endif
+
+        // Show success message for search results
+        @if(session('search_success'))
+        setTimeout(() => {
+            const alert = document.createElement('div');
+            alert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+            alert.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>{{ session('search_success') }}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-green-500 hover:text-green-700">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(alert);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                alert?.remove();
+            }, 5000);
+        }, 100);
+        @endif
+    });
+
+    // Delete Modal Functions
+    function confirmDelete(cableId, siteName, totalCore) {
+        document.getElementById('deleteCableId').textContent = cableId;
+        document.getElementById('deleteSiteName').textContent = siteName;
+        document.getElementById('deleteTotalCore').textContent = totalCore;
+
+        // Set form action
+        document.getElementById('deleteForm').action = `/fiber-cores/delete-cable/${cableId}`;
+
+        // Show modal
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+        }
+    });
+    </script>
+    @endpush
 @endsection
 
 @push('scripts')
