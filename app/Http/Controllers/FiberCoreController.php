@@ -53,7 +53,7 @@ class FiberCoreController extends Controller
             $query->where('region', $request->filter_region);
         }
 
-        $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site')
+        $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site', 'otdr')
             ->orderBy('cable_id')
             ->get();
 
@@ -142,12 +142,10 @@ class FiberCoreController extends Controller
             for ($c = 1; $c <= $jumlahCore; $c++) {
                 // Cek duplikat core pada cable_id
                 $exists = FiberCore::where('cable_id', $validated['cable_id'])
-                $exists = FiberCore::where('cable_id', $validated['cable_id'])
                     ->where('tube_number', $t)
                     ->where('core', $currentCore)
                     ->exists();
                 if (!$exists) {
-                    FiberCore::create([
                     FiberCore::create([
                         'cable_id' => $validated['cable_id'],
                         'nama_site' => $validated['nama_site'],
@@ -178,7 +176,6 @@ class FiberCoreController extends Controller
         $user = Auth::user();
 
         // Ambil semua core dengan cable_id ini
-        $cores = FiberCore::where('cable_id', $cable_id)
         $cores = FiberCore::where('cable_id', $cable_id)
             ->orderBy('tube_number')
             ->orderBy('core')
