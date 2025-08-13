@@ -21,9 +21,15 @@ class FiberCoreController extends Controller
             ->byRegion($request->filter_region);
 
         // Get paginated results
-        $cores = $query->orderBy('nama_site')
-            ->orderBy('tube_number')
-            ->orderBy('core')
+        $cores = DB::table('fiber_cores')
+            ->select(
+                'nama_site',
+                DB::raw('SUM(otdr) as total_otdr'),
+                DB::raw('COUNT(*) as total_cores'),
+                DB::raw('COUNT(DISTINCT tube_number) as total_tubes')
+            )
+            ->groupBy('nama_site')
+            ->orderBy('nama_site')
             ->paginate(20)
             ->withQueryString();
 

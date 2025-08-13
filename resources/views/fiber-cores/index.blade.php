@@ -67,7 +67,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($regionalStats as $stat)
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="flex items-center justify-between mb-2">
+   
                         <span class="px-2 py-1 rounded-full text-xs font-medium {{
                             match($stat->region) {
                                 'Denpasar Utara', 'Denpasar Selatan' => 'bg-purple-100 text-purple-800',
@@ -124,7 +124,7 @@
                             </option>
                         @endforeach
                     </select>
-                </div>
+                </div> 
 
                 <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
                     Filter
@@ -149,139 +149,39 @@
     </div>
 
     <!-- Table -->
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Site & Core
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Region
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tube
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Route
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            OTDR (m)
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Keterangan
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Aksi
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($cores as $core)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center gap-3">
-                                    @if($core->status === 'Active' && $core->penggunaan === 'OK')
-                                        <i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>
-                                    @elseif($core->status === 'Active' && $core->penggunaan === 'NOK')
-                                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i>
-                                    @else
-                                        <i data-lucide="x-circle" class="w-5 h-5 text-gray-500"></i>
-                                    @endif
-                                    <div>
-                                        <div class="px-2 py-1 rounded-full text-xs font-semibold {{ $core->status_badge }}">
-                                            {{ $core->status }}
-                                        </div>
-                                        <div class="mt-1 px-2 py-1 rounded-full text-xs font-semibold {{ $core->penggunaan_badge }}">
-                                            {{ $core->penggunaan }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="font-medium text-gray-900">{{ $core->nama_site }}</div>
-                                <div class="text-sm text-gray-500">Tube {{ $core->tube_number }} - Core {{ $core->core }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 py-1 rounded-full text-xs font-medium {{ $core->region_badge }}">
-                                    {{ $core->region }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $core->tube }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900">{{ $core->source_site }}</div>
-                                <div class="text-xs text-gray-500">↓</div>
-                                <div class="text-sm text-gray-900">{{ $core->destination_site }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ number_format($core->otdr) }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900 max-w-md">
-                                    <div class="line-clamp-2">{{ Str::limit($core->keterangan, 80) }}</div>
-                                    @if(strlen($core->keterangan) > 80)
-                                        <button
-                                            onclick="showFullText('{{ addslashes($core->keterangan) }}')"
-                                            class="text-blue-600 hover:text-blue-800 text-xs mt-1"
-                                        >
-                                            Lihat selengkapnya...
-                                        </button>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <div class="flex gap-2">
-                                    <a href=""
-                                       class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                                       title="Edit Core">
-                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                    </a>
-                                    <a href="{{ route('fiber-cores.show', $core) }}"
-                                       class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-                                       title="Lihat Detail">
-                                        <i data-lucide="search" class="w-4 h-4"></i>
-                                    </a>
-                                    <form action="{{ route('fiber-cores.destroy', $core) }}"
-                                          method="POST"
-                                          class="inline"
-                                          onsubmit="confirmDelete(this); return false;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-                                                title="Hapus Core">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-12">
-                                <div class="text-gray-500">
-                                    @if(request()->filled('search') || request()->filled('filter_status') || request()->filled('filter_region'))
-                                        Tidak ada data core yang sesuai dengan pencarian
-                                    @else
-                                        Belum ada data core.
-                                        <a href="{{ route('fiber-cores.create') }}" class="text-blue-600 hover:text-blue-800">
-                                            Tambah core baru
-                                        </a> atau
-                                        <a href="{{ route('fiber-cores.generate-sample') }}" class="text-green-600 hover:text-green-800">
-                                            generate sample data
-                                        </a>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
+    <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Daftar Fiber Core</h1>
+
+    <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Nama Site</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Region</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Jumlah Tube</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Jumlah Core</th>
+                <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700">Aksi</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            @foreach($cores as $site)
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">{{ $site->nama_site }}</td>
+                    {{-- <td class="px-4 py-2">{{ $site->region }}</td> --}}
+                    <td class="px-4 py-2">{{ $site->jumlah_tube }}</td>
+                    <td class="px-4 py-2">{{ $site->jumlah_core }}</td>
+                    <td class="px-4 py-2">
+                        <a href="{{ route('fiber-cores.show', $site->nama_site) }}"
+                           class="text-blue-600 hover:underline">
+                           Detail
+                        </a>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+@ends$sites
+     </tbody>
             </table>
         </div>
 
