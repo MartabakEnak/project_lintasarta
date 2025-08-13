@@ -13,28 +13,56 @@ class FiberCoreController extends Controller
      */
     public function index(Request $request)
     {
-        $sites = DB::table('fiber_cores')
+        // Base query untuk sites
+        $query = DB::table('fiber_cores')
             ->select(
                 'cable_id',
                 'nama_site',
                 'region',
                 'source_site',
                 'destination_site',
+                'otdr',
                 DB::raw('MAX(tube_number) as tube_number'),
                 DB::raw('COUNT(*) as total_core')
-            )
-            ->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site')
-            ->orderBy('cable_id')
-            ->get();
+            );
 
-        // Query statistik dan regionalStats sesuai kebutuhan lama Anda
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('cable_id', 'LIKE', "%{$search}%")
+                  ->orWhere('nama_site', 'LIKE', "%{$search}%")
+                  ->orWhere('region', 'LIKE', "%{$search}%")
+                  ->orWhere('source_site', 'LIKE', "%{$search}%")
+                  ->orWhere('destination_site', 'LIKE', "%{$search}%")
+                  ->orWhere('keterangan', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('filter_status') && $request->filter_status !== 'All') {
+            $query->where('status', $request->filter_status);
+        }
+
+        // Apply region filter
+        if ($request->filled('filter_region') && $request->filter_region !== 'All') {
+            $query->where('region', $request->filter_region);
+        }
+
+        $sites = $query->groupBy('cable_id', 'nama_site', 'region', 'source_site', 'destination_site', 'otdr')
+                      ->orderBy('cable_id')
+                      ->paginate(10)
+                      ->withQueryString(); // Preserve query parameters in pagination
+
+        // Query statistik (tetap tanpa filter untuk overview keseluruhan)
         $stats = [
-            'total' => \App\Models\FiberCore::count(),
-            'active' => \App\Models\FiberCore::where('status', 'Active')->count(),
-            'inactive' => \App\Models\FiberCore::where('status', 'Inactive')->count(),
-            'problems' => \App\Models\FiberCore::where('penggunaan', 'NOK')->count(),
+            'total' => FiberCore::count(),
+            'active' => FiberCore::where('status', 'Active')->count(),
+            'inactive' => FiberCore::where('status', 'Inactive')->count(),
+            'problems' => FiberCore::where('penggunaan', 'NOK')->count(),
         ];
 
+        // Regional stats (tetap tanpa filter)
         $regionalStats = DB::table('fiber_cores')
             ->select(
                 'region',
@@ -46,7 +74,7 @@ class FiberCoreController extends Controller
             ->orderBy('region')
             ->get();
 
-        $regions = \App\Models\FiberCore::select('region')->distinct()->pluck('region');
+        $regions = FiberCore::select('region')->distinct()->pluck('region');
 
         return view('fiber-cores.index', compact('sites', 'stats', 'regionalStats', 'regions'));
     }
@@ -88,12 +116,12 @@ class FiberCoreController extends Controller
             $jumlahCore = $corePerTube + ($t <= $sisa ? 1 : 0);
             for ($c = 1; $c <= $jumlahCore; $c++) {
                 // Cek duplikat core pada cable_id
-                $exists = \App\Models\FiberCore::where('cable_id', $validated['cable_id'])
+                $exists = FiberCore::where('cable_id', $validated['cable_id'])
                     ->where('tube_number', $t)
                     ->where('core', $currentCore)
                     ->exists();
                 if (!$exists) {
-                    \App\Models\FiberCore::create([
+                    FiberCore::create([
                         'cable_id' => $validated['cable_id'],
                         'nama_site' => $validated['nama_site'],
                         'region' => $validated['region'],
@@ -121,7 +149,7 @@ class FiberCoreController extends Controller
     public function show($cable_id)
     {
         // Ambil semua core dengan cable_id ini
-        $cores = \App\Models\FiberCore::where('cable_id', $cable_id)
+        $cores = FiberCore::where('cable_id', $cable_id)
             ->orderBy('tube_number')
             ->orderBy('core')
             ->get();
@@ -171,33 +199,26 @@ class FiberCoreController extends Controller
     }
 
     /**
-     * Get overall statistics
+     * Remove all cores for a specific cable_id
      */
-    private function getStatistics()
+    public function destroyByCableId($cable_id)
     {
-        return [
-            'total' => FiberCore::count(),
-            'active' => FiberCore::active()->count(),
-            'inactive' => FiberCore::inactive()->count(),
-            'problems' => FiberCore::problems()->count()
-        ];
-    }
+        // Get site info before deletion
+        $site = FiberCore::where('cable_id', $cable_id)->first();
 
-    /**
-     * Get regional statistics
-     */
-    private function getRegionalStatistics()
-    {
-        return DB::table('fiber_cores')
-            ->select(
-                'region',
-                DB::raw('COUNT(*) as total'),
-                DB::raw('SUM(CASE WHEN status = "Active" THEN 1 ELSE 0 END) as active'),
-                DB::raw('SUM(CASE WHEN penggunaan = "NOK" THEN 1 ELSE 0 END) as problems')
-            )
-            ->groupBy('region')
-            ->orderBy('region')
-            ->get();
+        if (!$site) {
+            return redirect()->route('fiber-cores.index')
+                ->with('error', 'Cable ID tidak ditemukan!');
+        }
+
+        // Count cores to be deleted
+        $coreCount = FiberCore::where('cable_id', $cable_id)->count();
+
+        // Delete all cores with this cable_id
+        FiberCore::where('cable_id', $cable_id)->delete();
+
+        return redirect()->route('fiber-cores.index')
+            ->with('success', "Berhasil menghapus {$coreCount} core dari Cable ID: {$cable_id} ({$site->nama_site})");
     }
 
     /**
@@ -218,25 +239,30 @@ class FiberCoreController extends Controller
             ['name' => 'Singaraja North', 'region' => 'Buleleng']
         ];
 
-        // Generate 2 tubes with 12 cores each for first site
-        $site = $sites[0];
+        // Generate sample data for multiple sites
+        foreach ($sites as $index => $site) {
+            if ($index >= 3) break; // Hanya 3 site pertama
 
-        for ($tube = 1; $tube <= 2; $tube++) {
-            for ($core = 1; $core <= 12; $core++) {
-                FiberCore::create([
-                    'nama_site' => $site['name'],
-                    'region' => $site['region'],
-                    'tube_number' => $tube,
-                    'core' => $core,
-                    'status' => rand(1, 10) > 2 ? 'Active' : 'Inactive',
-                    'penggunaan' => rand(1, 10) > 8 ? 'NOK' : (rand(1, 10) > 1 ? 'OK' : 'Idle'),
-                    'otdr' => rand(1200, 2200),
-                    'source_site' => $site['name'],
-                    'destination_site' => $sites[1]['name'],
-                    'keterangan' => "Core {$core} pada Tube {$tube} - " .
-                        (rand(0, 1) ? 'Primary service connection' : 'Backup service connection') .
-                        '. ' . (rand(1, 10) > 8 ? 'CRITICAL: Perlu maintenance' : 'Performance normal') . '.'
-                ]);
+            $cable_id = 'CABLE-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT);
+
+            for ($tube = 1; $tube <= rand(2, 4); $tube++) {
+                for ($core = 1; $core <= rand(6, 12); $core++) {
+                    FiberCore::create([
+                        'cable_id' => $cable_id,
+                        'nama_site' => $site['name'],
+                        'region' => $site['region'],
+                        'tube_number' => $tube,
+                        'core' => $core,
+                        'status' => rand(1, 10) > 2 ? 'Active' : 'Inactive',
+                        'penggunaan' => rand(1, 10) > 8 ? 'NOK' : (rand(1, 10) > 1 ? 'OK' : 'Idle'),
+                        'otdr' => rand(1200, 2200),
+                        'source_site' => $site['name'],
+                        'destination_site' => $sites[($index + 1) % count($sites)]['name'],
+                        'keterangan' => "Core {$core} pada Tube {$tube} - " .
+                            (rand(0, 1) ? 'Primary service connection' : 'Backup service connection') .
+                            '. ' . (rand(1, 10) > 8 ? 'CRITICAL: Perlu maintenance' : 'Performance normal') . '.'
+                    ]);
+                }
             }
         }
 

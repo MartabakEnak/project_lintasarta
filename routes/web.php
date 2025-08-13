@@ -16,4 +16,5 @@ Route::get('/generate-sample', [FiberCoreController::class, 'generateSample'])
 
 Route::get('/fiber-cores/{cable_id}', [FiberCoreController::class, 'show'])->name('fiber-cores.show');
 Route::put('/fiber-cores/{cable_id}/{id}', [FiberCoreController::class, 'update'])->name('fiber-cores.update');
-
+// Tambahkan route ini di web.php
+Route::delete('/fiber-cores/delete-cable/{cable_id}', [FiberCoreController::class, 'destroyByCableId'])->name('fiber-cores.destroy-cable');

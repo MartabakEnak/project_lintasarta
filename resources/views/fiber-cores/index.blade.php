@@ -93,30 +93,41 @@
         </div>
     </div>
 
-    <!-- Controls -->
+    <!-- Search & Filter Controls -->
     <div class="bg-white rounded-xl shadow-lg p-8 mb-10">
-        <form method="GET" action="{{ route('fiber-cores.index') }}" class="flex flex-col lg:flex-row gap-6 items-center justify-between">
+        <form method="GET" action="{{ route('fiber-cores.index') }}" id="searchForm" class="flex flex-col lg:flex-row gap-6 items-center justify-between">
             <div class="flex flex-col md:flex-row gap-4 items-center">
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"></i>
                     <input
                         type="text"
                         name="search"
-                        placeholder="Cari core, site, region, atau keterangan..."
-                        class="pl-12 pr-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80 shadow"
+                        id="searchInput"
+                        placeholder="Cari cable ID, site, region, atau keterangan..."
+                        class="pl-12 pr-10 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-80 shadow transition-all"
                         value="{{ request('search') }}"
                     />
+                    <!-- Loading indicator -->
+                    <div id="searchLoading" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
+                        <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+                    </div>
+                    <!-- Clear button -->
+                    @if(request('search'))
+                    <button type="button" id="clearSearch" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                    @endif
                 </div>
 
                 <div class="flex items-center gap-2">
                     <i data-lucide="filter" class="w-5 h-5 text-blue-600"></i>
-                    <select name="filter_status" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select name="filter_status" id="filterStatus" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         <option value="All" {{ request('filter_status') === 'All' ? 'selected' : '' }}>Semua Status</option>
                         <option value="Active" {{ request('filter_status') === 'Active' ? 'selected' : '' }}>Active</option>
                         <option value="Inactive" {{ request('filter_status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
 
-                    <select name="filter_region" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <select name="filter_region" id="filterRegion" class="border-2 border-blue-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         <option value="All" {{ request('filter_region') === 'All' ? 'selected' : '' }}>Semua Region</option>
                         @foreach($regions as $region)
                             <option value="{{ $region }}" {{ request('filter_region') === $region ? 'selected' : '' }}>
@@ -126,11 +137,38 @@
                     </select>
                 </div>
 
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow transition">
-                    <i data-lucide="filter" class="w-5 h-5 mr-1"></i> Filter
-                </button>
+                <!-- Search Status Indicator -->
+                <div class="flex items-center gap-2">
+                    <div class="bg-blue-100 hover:bg-blue-200 p-3 rounded-lg transition-all cursor-pointer" id="searchIndicator" title="Search Status">
+                        <i data-lucide="search" class="w-5 h-5 text-blue-600" id="searchIcon"></i>
+                    </div>
+                    @if(request()->hasAny(['search', 'filter_status', 'filter_region']) && (request('search') || request('filter_status') !== 'All' || request('filter_region') !== 'All'))
+                    <a href="{{ route('fiber-cores.index') }}" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-lg transition-all" title="Reset Filters">
+                        <i data-lucide="refresh-cw" class="w-5 h-5 text-gray-600"></i>
+                    </a>
+                    @endif
+                </div>
             </div>
         </form>
+
+        <!-- Search Results Info -->
+        @if(request()->hasAny(['search', 'filter_status', 'filter_region']) && (request('search') || request('filter_status') !== 'All' || request('filter_region') !== 'All'))
+        <div class="mt-4 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">
+            <i data-lucide="info" class="w-4 h-4"></i>
+            <span>
+                Menampilkan {{ $sites->count() }} dari {{ $sites->total() }} hasil
+                @if(request('search'))
+                    untuk pencarian "<strong>{{ request('search') }}</strong>"
+                @endif
+                @if(request('filter_status') && request('filter_status') !== 'All')
+                    dengan status "<strong>{{ request('filter_status') }}</strong>"
+                @endif
+                @if(request('filter_region') && request('filter_region') !== 'All')
+                    di region "<strong>{{ request('filter_region') }}</strong>"
+                @endif
+            </span>
+        </div>
+        @endif
     </div>
 
     <!-- Table -->
@@ -143,14 +181,15 @@
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Site</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Region</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Route</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">OTDR (m)</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Jumlah Tube</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Total Core</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-blue-700 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-blue-100">
+                <tbody class="bg-white divide-y divide-blue-100" id="tableBody">
                     @forelse($sites as $site)
-                        <tr class="hover:bg-blue-50 transition">
+                        <tr class="hover:bg-blue-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap font-semibold text-blue-900">
                                 {{ $site->cable_id }}
                             </td>
@@ -164,38 +203,259 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-blue-900">{{ $site->source_site }}</div>
-                                <div class="text-xs text-blue-400">↓</div>
+                                <div class="text-xs text-blue-400 text-center">↓</div>
                                 <div class="text-sm text-blue-900">{{ $site->destination_site }}</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
-                                {{ $site->tube_number }}
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-medium text-gray-900">{{ number_format($site->otdr) }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
-                                {{ $site->total_core }}
+                                <span class="bg-blue-50 px-2 py-1 rounded-full font-medium">{{ $site->tube_number }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-900">
+                                <span class="bg-green-50 px-2 py-1 rounded-full font-medium text-green-800">{{ $site->total_core }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('fiber-cores.show', $site->cable_id) }}"
-                                   class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition"
-                                   title="Lihat Detail">
-                                    <i data-lucide="search" class="w-4 h-4"></i>
-                                    Detail
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('fiber-cores.show', $site->cable_id) }}"
+                                       class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg shadow transition-colors text-xs"
+                                       title="Lihat Detail">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                        Detail
+                                    </a>
+                                    <button onclick="confirmDelete('{{ $site->cable_id }}', '{{ $site->nama_site }}', {{ $site->total_core }})"
+                                            class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg shadow transition-colors text-xs"
+                                            title="Hapus Cable">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        Hapus
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-12 text-gray-500">
-                                Tidak ada data site.
+                            <td colspan="8" class="text-center py-12">
+                                <div class="flex flex-col items-center gap-2 text-gray-500">
+                                    <i data-lucide="search-x" class="w-12 h-12 text-gray-300"></i>
+                                    <p class="text-lg font-medium">Tidak ada data yang ditemukan</p>
+                                    @if(request()->hasAny(['search', 'filter_status', 'filter_region']))
+                                        <p class="text-sm">Coba ubah kata kunci pencarian atau filter</p>
+                                        <a href="{{ route('fiber-cores.index') }}" class="text-blue-600 hover:text-blue-800 text-sm underline">
+                                            Reset semua filter
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        @if(method_exists($sites, 'links'))
-            <div class="bg-white px-4 py-3 border-t border-blue-100 sm:px-6">
-                {{ $sites->links() }}
+
+        <!-- Pagination -->
+        @if($sites->hasPages())
+            <div class="bg-white px-6 py-4 border-t border-blue-100">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Menampilkan {{ $sites->firstItem() }} sampai {{ $sites->lastItem() }} dari {{ $sites->total() }} hasil
+                    </div>
+                    {{ $sites->links() }}
+                </div>
             </div>
         @endif
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-red-100 p-2 rounded-full">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900">Konfirmasi Hapus Cable</h3>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-gray-600 mb-3">Apakah Anda yakin ingin menghapus cable berikut?</p>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="space-y-2">
+                        <div><span class="font-semibold">Cable ID:</span> <span id="deleteCableId" class="text-red-700 font-medium"></span></div>
+                        <div><span class="font-semibold">Nama Site:</span> <span id="deleteSiteName" class="text-red-700"></span></div>
+                        <div><span class="font-semibold">Total Core:</span> <span id="deleteTotalCore" class="text-red-700 font-medium"></span> core akan dihapus</div>
+                    </div>
+                </div>
+                <p class="text-red-600 text-sm mt-3 font-medium">⚠️ Tindakan ini tidak dapat dibatalkan!</p>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeDeleteModal()"
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                    Batal
+                </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                        Ya, Hapus Cable
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const filterStatus = document.getElementById('filterStatus');
+        const filterRegion = document.getElementById('filterRegion');
+        const searchLoading = document.getElementById('searchLoading');
+        const searchIndicator = document.getElementById('searchIndicator');
+        const clearSearchBtn = document.getElementById('clearSearch');
+
+        let searchTimeout;
+
+        // Function to show loading state
+        function showLoading() {
+            searchLoading?.classList.remove('hidden');
+            searchIndicator?.classList.add('animate-pulse', 'bg-blue-200');
+            searchIndicator?.classList.remove('bg-blue-100');
+        }
+
+        // Function to hide loading state
+        function hideLoading() {
+            searchLoading?.classList.add('hidden');
+            searchIndicator?.classList.remove('animate-pulse', 'bg-blue-200');
+            searchIndicator?.classList.add('bg-blue-100');
+        }
+
+        // Function to submit form with delay (debounce)
+        function submitFormWithDelay() {
+            clearTimeout(searchTimeout);
+            showLoading();
+
+            searchTimeout = setTimeout(function() {
+                searchForm.submit();
+            }, 600); // 600ms delay for better UX
+        }
+
+        // Real-time search on input
+        searchInput?.addEventListener('input', function() {
+            submitFormWithDelay();
+        });
+
+        // Auto submit on filter changes
+        filterStatus?.addEventListener('change', function() {
+            showLoading();
+            setTimeout(function() {
+                searchForm.submit();
+            }, 100);
+        });
+
+        filterRegion?.addEventListener('change', function() {
+            showLoading();
+            setTimeout(function() {
+                searchForm.submit();
+            }, 100);
+        });
+
+        // Clear search functionality
+        clearSearchBtn?.addEventListener('click', function() {
+            searchInput.value = '';
+            submitFormWithDelay();
+        });
+
+        // Clear search on Escape key
+        searchInput?.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                searchInput.value = '';
+                submitFormWithDelay();
+            }
+        });
+
+        // Visual feedback on focus
+        searchInput?.addEventListener('focus', function() {
+            searchIndicator?.classList.add('ring-2', 'ring-blue-300', 'ring-opacity-50');
+        });
+
+        searchInput?.addEventListener('blur', function() {
+            searchIndicator?.classList.remove('ring-2', 'ring-blue-300', 'ring-opacity-50');
+        });
+
+        // Prevent form submission on Enter if search is empty
+        searchForm?.addEventListener('submit', function(e) {
+            if (searchInput.value.trim() === '' &&
+                filterStatus.value === 'All' &&
+                filterRegion.value === 'All') {
+                e.preventDefault();
+                window.location.href = "{{ route('fiber-cores.index') }}";
+            }
+        });
+
+        // Auto-focus search input on page load if there's a search query
+        @if(request('search'))
+        searchInput?.focus();
+        searchInput?.setSelectionRange(searchInput.value.length, searchInput.value.length);
+        @endif
+
+        // Show success message for search results
+        @if(session('search_success'))
+        setTimeout(() => {
+            const alert = document.createElement('div');
+            alert.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+            alert.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>{{ session('search_success') }}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-green-500 hover:text-green-700">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(alert);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                alert?.remove();
+            }, 5000);
+        }, 100);
+        @endif
+    });
+
+    // Delete Modal Functions
+    function confirmDelete(cableId, siteName, totalCore) {
+        document.getElementById('deleteCableId').textContent = cableId;
+        document.getElementById('deleteSiteName').textContent = siteName;
+        document.getElementById('deleteTotalCore').textContent = totalCore;
+
+        // Set form action
+        document.getElementById('deleteForm').action = `/fiber-cores/delete-cable/${cableId}`;
+
+        // Show modal
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+        }
+    });
+    </script>
+    @endpush
 @endsection
